@@ -1,3 +1,11 @@
+// Time Function
+function getTimeString(time){
+    const hour = parseInt(time / 3600);
+    let secondRemaining = time % 3600;
+    const minute = parseInt(secondRemaining / 60);
+    secondRemaining = secondRemaining % 60;
+    return `- ${hour} Hour ${minute} Min ago `
+}
 
 // Load categories using API Fetch 
 
@@ -10,19 +18,43 @@ const loadCategories = () => {
 
 
 // Display Category 
+
+// const displayCategories = (categories) => {
+//     const categoryContainer = document.getElementById('categories')
+//     categories.forEach((item) => {
+//         // create button 
+//         const button = document.createElement('button')
+//         button.classList = "btn btn-primary mr-4"
+//         button.innerText = item.category;
+
+//         // Add Button to Category Container 
+//         categoryContainer.appendChild(button)
+//     });
+// }
+
+// Display Category  Method 2
 const displayCategories = (categories) => {
     const categoryContainer = document.getElementById('categories')
     categories.forEach((item) => {
         // create button 
-        const button = document.createElement('button')
-        button.classList = "btn btn-primary mr-4"
-        button.innerText = item.category;
+        const buttonContainer = document.createElement('div')
+        buttonContainer.innerHTML = `
+            <button onclick="loadCategoriesVideos( ${item.category_id} )" class="btn bg-red-500 mr-4"> ${ item.category} </button>
+        `
+        
 
         // Add Button to Category Container 
-        categoryContainer.appendChild(button)
+        categoryContainer.appendChild(buttonContainer)
     });
 }
 
+// Load Category Videos
+function loadCategoriesVideos (id){
+    fetch(`https://openapi.programming-hero.com/api/phero-tube/category/${id}`)
+    .then((response) => response.json())
+    .then((data) => displayVideos(data.category))
+    .catch((error) => console.log(error))
+}
 
 // Load videos 
 const loadVideos = () => {
@@ -32,30 +64,28 @@ const loadVideos = () => {
     .catch((error) => console.log(error))
 }
 
-// const cardDemo = {
-//     "category_id": "1001",
-//     "video_id": "aaaa",
-//     "thumbnail": "https://i.ibb.co/L1b6xSq/shape.jpg",
-//     "title": "Shape of You",
-//     "authors": [
-    //     {
-    //     "profile_picture": "https://i.ibb.co/D9wWRM6/olivia.jpg",
-    //     "profile_name": "Olivia Mitchell",
-    //     "verified": ""
-    //     }
-//     ],
 
-
-//     "others": {
-    //     "views": "100K",
-    //     "posted_date": "16278"
-//     },
-//     "description": "Dive into the rhythm of 'Shape of You,' a captivating track that blends pop sensibilities with vibrant beats. Created by Olivia Mitchell, this song has already gained 100K views since its release. With its infectious melody and heartfelt lyrics, 'Shape of You' is perfect for fans looking for an uplifting musical experience. Let the music take over as Olivia's vocal prowess and unique style create a memorable listening journey."
-// },
 
 // Display Videos 
 const displayVideos = (videos) => {
     const videosConteiner =document.getElementById('vides')
+    // when category will be filter then only see category videos
+    videosConteiner.innerHTML= " "
+
+    // Video Not found
+    if(videos.length == 0){
+        videosConteiner.classList.remove('grid')
+        videosConteiner.innerHTML= `
+            <div class=" flex flex-col justify-center items-center gap-7 text-center">
+                <img class="w-48 h-48 mt-20"  src="images/Icon.png" alt="">
+                <p class="text-2xl font-bold"> Opss! Sorry, </br> There is no content Here. </p>
+            </div>
+        `;
+        return;
+    } else {
+        videosConteiner.classList.add('grid')
+    }
+
     videos.forEach((video) => {
         const card = document.createElement('div')
         card.classList = "card card-compact bg-base-100  shadow-xl mt-6"
@@ -72,11 +102,19 @@ const displayVideos = (videos) => {
                     <h3 class="card-title">${video.title}!</h3>
 
                     <div class="flex items-center">
-                        <p> ${video.authors[0].profile_name} ${video.authors[0].verified} </p>
-                        <img class="w-5 h-5 ml-2" src="https://img.icons8.com/?size=48&id=98A4yZTt9abw&format=png" alt="">
+                        <p> ${video.authors[0].profile_name} </p>
+
+                        ${video.authors[0].verified == true ? `<img class="w-5 h-5 ml-2" src="https://img.icons8.com/?size=48&id=98A4yZTt9abw&format=png" alt=""></img>` : " " }
+                        
+                        
                     </div>
 
-                    <p> ${video.others.views} ${video.others.posted_date} </p>
+                    <div class="flex items-center gap-2">
+                        <p> ${video.others.views} views</p> 
+                        <p class="text-sm"> ${video.others.posted_date?.length == 0 ? " " : `${ getTimeString(video.others.posted_date) }`}</p> 
+                        
+                    </div>
+
                 </div>
             </div>
         
@@ -94,5 +132,7 @@ const displayVideos = (videos) => {
 
 
 
+
+// Call Functions 
 loadCategories()
 loadVideos()
