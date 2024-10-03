@@ -4,7 +4,7 @@ function getTimeString(time){
     let secondRemaining = time % 3600;
     const minute = parseInt(secondRemaining / 60);
     secondRemaining = secondRemaining % 60;
-    return `- ${hour} Hour ${minute} Min ago `
+    return ` ${hour} Hour ${minute} Min ago `
 }
 
 // Load categories using API Fetch 
@@ -39,7 +39,7 @@ const displayCategories = (categories) => {
         // create button 
         const buttonContainer = document.createElement('div')
         buttonContainer.innerHTML = `
-            <button onclick="loadCategoriesVideos( ${item.category_id} )" class="btn bg-red-500 mr-4"> ${ item.category} </button>
+            <button id=" btn-${item.category_id}" onclick="loadCategoriesVideos ( ${item.category_id} )" class="btn category-btn bg-gray-500 mr-4"> ${ item.category} </button>
         `
         
 
@@ -48,22 +48,53 @@ const displayCategories = (categories) => {
     });
 }
 
+
+
 // Load Category Videos
-function loadCategoriesVideos (id){
+const loadCategoriesVideos = (id) => {
     fetch(`https://openapi.programming-hero.com/api/phero-tube/category/${id}`)
     .then((response) => response.json())
-    .then((data) => displayVideos(data.category))
-    .catch((error) => console.log(error))
+    .then((data) => {
+        // category btn activate 
+        const activeBtn = document.getElementById(`btn-${id}`); 
+        activeBtn.classList.add("active");
+        // display video category 
+        displayVideos(data.category);
+    })
+    // .catch((error) => console.log(error))
+};
+
+// Video Details 
+const loadDetails = async(videoId) => {
+    const url = `https://openapi.programming-hero.com/api/phero-tube/video/${videoId}`
+    const response = await fetch(url);
+    const data = await response.json();
+    displayDetails(data.video)
+}
+
+// Display Video Details
+const displayDetails = (video) => {
+    const detailContainer = document.getElementById('modal-content');
+    detailContainer.innerHTML = `
+        <img src="${video.thumbnail}" alt="">
+        <h2 class="text-lg font-bold mt-3 mb-3">${video.title}</h2>
+        <p> ${video.description} </p>
+        <h3 class="text-lg font-bold mt-3 mb-3"> Author: ${video.authors[0].profile_name}</h3>
+        <p> ${video.others.views} views </p> 
+        <p class="text-sm">Published: ${video.others.posted_date?.length == 0 ? " " : `${ getTimeString(video.others.posted_date) }`}</p> 
+        
+    `
+
+    document.getElementById('customModal').showModal();
 }
 
 // Load videos 
-const loadVideos = () => {
-    fetch('https://openapi.programming-hero.com/api/phero-tube/videos')
+const loadVideos = (searchText = "") => {
+    fetch(`https://openapi.programming-hero.com/api/phero-tube/videos?title=${searchText}`)
     .then((response) => response.json())
     .then((data) => displayVideos(data.videos))
     .catch((error) => console.log(error))
 }
-
 
 
 // Display Videos 
@@ -98,7 +129,7 @@ const displayVideos = (videos) => {
                 <div class="w-2/12 rounded-full"> 
                     <img class=" w-10 h-10 rounded-full" src=" ${video.authors[0].profile_picture} " alt="">
                 </div>
-                <div class="w-8/12">
+                <div class="w-10/12">
                     <h3 class="card-title">${video.title}!</h3>
 
                     <div class="flex items-center">
@@ -114,6 +145,7 @@ const displayVideos = (videos) => {
                         <p class="text-sm"> ${video.others.posted_date?.length == 0 ? " " : `${ getTimeString(video.others.posted_date) }`}</p> 
                         
                     </div>
+                    <p> <button onclick="loadDetails('${video.video_id}')" class=" btn bg-gray-500 w-full" > Details </button> </p>
 
                 </div>
             </div>
@@ -125,6 +157,10 @@ const displayVideos = (videos) => {
 }
 
 
+// Search video
+document.getElementById('search-input').addEventListener('keyup', (event) => {
+    loadVideos(event.target.value)
+})
 
 
 
